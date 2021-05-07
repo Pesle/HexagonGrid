@@ -34,8 +34,10 @@ function draw() {
       points[x][y].display();
     }
   }
-  if(count == 301 && mobile == true){
+  
+  if(count == 201 && mobile == true){
     noLoop();
+    count = 0;
   }
 
   if(count > reshuffle){
@@ -47,7 +49,6 @@ function draw() {
     }
     count = 0;
   }
-
   count++;
 
   // for(let i = 0; i < playerCount; i++){
@@ -59,8 +60,13 @@ function draw() {
 
 
 function generateMap(){
-  xSpace = 20; 
-  ySpace = 50;
+  if(mobile){
+    xSpace = 20; 
+    ySpace = 50;
+  }else{ 
+    xSpace = 28; 
+    ySpace = 70;
+  }
   let offset = 1;
   
   //Create grid of points
@@ -256,12 +262,16 @@ class Point {
     stroke(150);
     point(this.x, this.y);
     
-    strokeWeight(4); // Thicker
+    if(mobile)
+      strokeWeight(4); // Thicker
+    else
+      strokeWeight(6); // Thicker
+
     if(this.n1Angle > 0 && this.n1 != null){
       stroke(150);
       let tempX = map(this.n1Angle, 0, 100, this.x, this.n1.x, 1);
       let tempY = map(this.n1Angle, 0, 100, this.y, this.n1.y, 1);
-      if(this.n1Positive && this.n1Angle < 150)
+      if(this.n1Positive && this.n1Angle < 130)
         this.n1Angle += changeRate;
       else if(this.n1Positive == false){
         this.n1Angle -= changeRate;
@@ -273,7 +283,7 @@ class Point {
       stroke(150);
       let tempX = map(this.n2Angle, 0, 100, this.x, this.n2.x, 1);
       let tempY = map(this.n2Angle, 0, 100, this.y, this.n2.y, 1);
-      if(this.n2Positive && this.n2Angle < 150)
+      if(this.n2Positive && this.n2Angle < 130)
         this.n2Angle += changeRate;
       else if(this.n2Positive == false){
         this.n2Angle -= changeRate;
@@ -284,7 +294,7 @@ class Point {
       stroke(150);
       let tempX = map(this.n3Angle, 0, 100, this.x, this.n3.x, 1);
       let tempY = map(this.n3Angle, 0, 100, this.y, this.n3.y, 1);
-      if(this.n3Positive && this.n3Angle < 150)
+      if(this.n3Positive && this.n3Angle < 130)
         this.n3Angle += changeRate;
       else if(this.n3Positive == false){
         this.n3Angle -= changeRate;
