@@ -10,47 +10,69 @@ let changeRate = 2;
 let count = 202;
 let reshuffle = 200;
 
+let height = 400;
+
 let mobile = false;
 
 let pg;
+let cnv;
 
 function setup() {
-
+  height = windowHeight;
+  //height = (windowWidth / 4 + windowHeight / 4)/2+ 100;
   //Check if browser is on mobile
   if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
     mobile = true;
     console.log("mobile");
   }
 
-  frameRate(20);
+  if(mobile){
+    frameRate(30);
+  }else{
+    frameRate(20);
+  }
   
-  createCanvas(windowWidth, windowHeight);
-
-  //Create graphics for points of hexagons for better performance
-  pg = createGraphics(windowWidth, windowHeight);
+  cnv = createCanvas(windowWidth, height);
+  cnv.parent('sketch-holder');
   
-  //Set graphics for points
-  pg.background(0);
-  pg.stroke(color('#267F00'));
-  if(mobile)
-    pg.strokeWeight(4); // Thinner
-  else
-    pg.strokeWeight(6); // Thicker
-
-  //GENERATE AND DISPLAY MAP
-  generateMap();
-
+  setupPage();
 
   //Set graphics for grid
-  stroke(color('#267F00'));
-  if(mobile)
-    strokeWeight(4); // Thinner
-  else
-    strokeWeight(6); // Thicker
+  stroke(color('#195500'));
+  strokeWeight(14); // Thicker
     
 }
 
+
+function windowResized() {
+  loop();
+  //height = (windowWidth / 4 + windowHeight / 4)/2 + 100;
+  height = windowHeight;
+  cnv = resizeCanvas(windowWidth, height);
+  setupPage();
+}
+
+function setupPage(){
+
+  //Create graphics for points of hexagons for better performance
+  pg = createGraphics(windowWidth, height);
+  //Set graphics for points
+  pg.stroke(color('#195500'));
+  if(mobile){
+    pg.strokeWeight(0); // Thicker
+  }else{
+    pg.strokeWeight(14); // Thicker
+  }
+
+  points.length = 0;
+  cX = 0;
+  cY = 0;
+  count = reshuffle+2;
+  generateMap();
+}
+
 function draw() {
+  clear();
   //Render display and draw lines
   image(pg, 0, 0);
   for(let x = 0; x < points.length; x++){
@@ -81,25 +103,22 @@ function draw() {
 
 
 function generateMap(){
+  console.log("Generating Map");
+
   //Dense grid for mobile, bigger for pc
-  if(mobile){
-    xSpace = 20; 
-    ySpace = 50;
-  }else{ 
-    xSpace = 28; 
-    ySpace = 70;
-  }
+  xSpace = 40; 
+  ySpace = 100;
   let offset = 1;
   
   //Create grid of points
-  for(let x = xSpace; x < windowWidth; x+=xSpace){
+  for(let x = 0; x < windowWidth+xSpace; x+=xSpace){
     
     points[cX] = [];
     
     //Offset every second and third row
-    let start = ySpace;
+    let start = 0;
     if(offset > 1){
-      start = ySpace/2;
+      start = start - ySpace/2;
     }
     if(offset == 3){
       offset = -1;
@@ -108,7 +127,7 @@ function generateMap(){
 
     //Add points
     cY = 0;
-    for(let y = start; y < windowHeight; y+=ySpace){
+    for(let y = start; y < height+xSpace; y+=ySpace){
       pg.point(x, y);
       points[cX][cY] = new Point(x, y);
       cY++;
@@ -129,7 +148,6 @@ function generateMap(){
     offset1++;
 
     for(let y = 0; y < points[x].length; y++){
-      
       
       if(x > 0){
         //Join top rows
