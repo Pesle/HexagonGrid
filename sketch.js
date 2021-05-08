@@ -1,7 +1,5 @@
 let points = [];
-let players = [];
 
-let playerCount = 1;
 let probability = 0.4;
 
 let cX = 0;
@@ -14,32 +12,60 @@ let reshuffle = 200;
 
 let mobile = false;
 
-function setup() {
-  frameRate(20);
-  //GENERATE AND DISPLAY MAP
-  createCanvas(windowWidth, windowHeight);
-  generateMap();
+let pg;
 
+function setup() {
+
+  //Check if browser is on mobile
   if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
     mobile = true;
     console.log("mobile");
   }
+
+  frameRate(20);
+  
+  createCanvas(windowWidth, windowHeight);
+
+  //Create graphics for points of hexagons for better performance
+  pg = createGraphics(windowWidth, windowHeight);
+  
+  //Set graphics for points
+  pg.background(0);
+  pg.stroke(color('#267F00'));
+  if(mobile)
+    pg.strokeWeight(4); // Thinner
+  else
+    pg.strokeWeight(6); // Thicker
+
+  //GENERATE AND DISPLAY MAP
+  generateMap();
+
+
+  //Set graphics for grid
+  stroke(color('#267F00'));
+  if(mobile)
+    strokeWeight(4); // Thinner
+  else
+    strokeWeight(6); // Thicker
+    
 }
 
 function draw() {
-  // image(pg, 0, 0);
-  background(0);
+  //Render display and draw lines
+  image(pg, 0, 0);
   for(let x = 0; x < points.length; x++){
     for(let y = 0; y < points[x].length; y++){
       points[x][y].display();
     }
   }
   
+  //Do not reshuffle if on mobile
   if(count == 201 && mobile == true){
     noLoop();
     count = 0;
   }
 
+  //Shuffle all lines every couple of seconds
   if(count > reshuffle){
     console.log("reshuffle");
     for(let x = 0; x < points.length; x++){
@@ -50,16 +76,12 @@ function draw() {
     count = 0;
   }
   count++;
-
-  // for(let i = 0; i < playerCount; i++){
-  //   // players[i].move();
-  //   // players[i].display();
-  // }
   
 }
 
 
 function generateMap(){
+  //Dense grid for mobile, bigger for pc
   if(mobile){
     xSpace = 20; 
     ySpace = 50;
@@ -87,7 +109,7 @@ function generateMap(){
     //Add points
     cY = 0;
     for(let y = start; y < windowHeight; y+=ySpace){
-
+      pg.point(x, y);
       points[cX][cY] = new Point(x, y);
       cY++;
     }
@@ -149,157 +171,102 @@ function generateMap(){
   }
 }
 
-// class Player {
-//   constructor(color, start){
-//     this.color = color;
-//     this.position = start;
-//     this.lastRandom = 1;
-//   }
-
-//   move(){
-    
-//     let newPosition = null;
-//     let move = int(random(3));
-    
-//     //Reshuffle
-//     if(move == this.lastRandom)
-//       int(random(3));
-
-//     if(move == 0 && this.position.n1 != null){
-//       console.log(this.position.n1);
-//       newPosition = this.position.n1;
-//     }else if(move == 1 && this.position.n2 != null){
-//       console.log(this.position.n2);
-//       newPosition = this.position.n2;
-//     }else if(this.position.n3 != null){
-//       console.log(this.position.n3);
-//       newPosition = this.position.n3;
-//     }
-//     if(newPosition != null){
-//       this.lastRandom = move;
-//       this.position = newPosition;
-//     }
-//   }
-
-//   display(){
-//     stroke(this.color);
-//     strokeWeight(15); // Thicker
-//     point(this.position.x, this.position.y);
-//   }
-
-// }
-
 class Point {
   constructor(x, y){
     this.x = x;
     this.y = y;
 
-    this.n1Positive = true;
     this.n1 = null;
-    this.n1Display = false;
-    this.n1Angle = 0;
-
-    this.n2Positive = true;
     this.n2 = null;
-    this.n2Display = false;
-    this.n2Angle = 0;
-
-    this.n3Positive = true;
     this.n3 = null;
-    this.n3Display = false;
-    this.n3Angle = 0;
+
   }
   
   //Add Neighbours
-  //Ensure the centre node is connected on all
   addN1(n1){
-    this.n1 =  n1;
+    this.n1 = new Line(n1);
   }
   addN2(n2){
-    this.n2 =  n2;
+    this.n2 =  new Line(n2);
   }
   addN3(n3){
-    this.n3 =  n3;
+    this.n3 =  new Line(n3);
   }
 
+  //Shuffle all lines
   shuffle(){
-    let newN1 = (random(1) > probability ? true : false);
-    let newN2 = (random(1) > probability ? true : false);
-    let newN3 = (random(1) > probability ? true : false);
 
-    if(this.n1Display != newN1){
-      if(newN1 == false){
-        this.n1Positive = false;
-      }else{
-        this.n1Angle = 1;
-        this.n1Positive = true;
-      }
-      this.n1Display = newN1;
-    }
+    //Generate one new random number to shuffle the lines
+    let value = random(1);
+    let upperValue = value+probability;
+    let lowerValue = value-probability;
 
-    if(this.n2Display != newN2){
-      if(newN2 == false){
-        this.n2Positive = false;
-      }else{
-        this.n2Angle = 1;
-        this.n2Positive = true;
-      }
-      this.n2Display = newN2;
-    }
-
-    if(this.n3Display != newN3){
-      if(newN3 == false){
-        this.n3Positive = false;
-      }else{
-        this.n3Angle = 1;
-        this.n3Positive = true;
-      }
-      this.n3Display = newN3;
-    }
+    if(this.n1 != null)
+      this.n1.shuffle(upperValue, lowerValue);
+    if(this.n2 != null)
+      this.n2.shuffle(upperValue, lowerValue);
+    if(this.n3 != null)
+      this.n3.shuffle(upperValue, lowerValue);
   }
 
+  //Display points and lines
   display(){
-    stroke(150);
-    point(this.x, this.y);
-    
-    if(mobile)
-      strokeWeight(4); // Thicker
-    else
-      strokeWeight(6); // Thicker
+    if(this.n1 != null)
+      this.n1.display(this.x, this.y);
+    if(this.n2 != null)
+      this.n2.display(this.x, this.y);
+    if(this.n3 != null)
+      this.n3.display(this.x, this.y);
+  }
+}
 
-    if(this.n1Angle > 0 && this.n1 != null){
-      stroke(150);
-      let tempX = map(this.n1Angle, 0, 100, this.x, this.n1.x, 1);
-      let tempY = map(this.n1Angle, 0, 100, this.y, this.n1.y, 1);
-      if(this.n1Positive && this.n1Angle < 130)
-        this.n1Angle += changeRate;
-      else if(this.n1Positive == false){
-        this.n1Angle -= changeRate;
-      }
-      line(this.x, this.y, tempX, tempY);
-    }
 
-    if(this.n2Angle > 0 && this.n2 != null){
-      stroke(150);
-      let tempX = map(this.n2Angle, 0, 100, this.x, this.n2.x, 1);
-      let tempY = map(this.n2Angle, 0, 100, this.y, this.n2.y, 1);
-      if(this.n2Positive && this.n2Angle < 130)
-        this.n2Angle += changeRate;
-      else if(this.n2Positive == false){
-        this.n2Angle -= changeRate;
+class Line{
+  constructor(vector){
+    this.v = vector;
+    this.positive = true;
+    this.visible = false;
+    this.length = 0;
+
+    //Assign a random value during setup
+    this.value = random(1);
+  }
+
+  shuffle(upperValue, lowerValue){
+
+    //Compare stored random to new random
+    let rand = (this.value < upperValue && this.value > lowerValue ? true : false);
+
+    //Check whether to shrink or grow line
+    if(this.visible != rand){
+      if(rand == false){
+        this.positive = false;
+      }else{
+        this.length = 1;
+        this.positive = true;
       }
-      line(this.x, this.y, tempX, tempY);
-    }
-    if(this.n3Angle > 0 && this.n3 != null){
-      stroke(150);
-      let tempX = map(this.n3Angle, 0, 100, this.x, this.n3.x, 1);
-      let tempY = map(this.n3Angle, 0, 100, this.y, this.n3.y, 1);
-      if(this.n3Positive && this.n3Angle < 130)
-        this.n3Angle += changeRate;
-      else if(this.n3Positive == false){
-        this.n3Angle -= changeRate;
-      }
-      line(this.x, this.y, tempX, tempY);
+      this.visible = rand;
     }
   }
+
+  display(x, y){
+    //If length is longer than 1, display lines
+    if(this.length > 0 && this.v != null){
+
+      //Calculate length of line based on start, end and line length
+      let tempX = map(this.length, 0, 100, x, this.v.x, 1);
+      let tempY = map(this.length, 0, 100, y, this.v.y, 1);
+
+      //Grow if positive and not already fully grown
+      if(this.positive && this.length < 130)
+        this.length += changeRate;
+
+      //Shrink if meant to be hidden
+      else if(this.positive == false){
+        this.length -= changeRate;
+      }
+      line(x, y, tempX, tempY);
+    }
+  }
+
 }
